@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:movieapp/api/movie_service.dart';
 import 'package:movieapp/movie/models/MovieModel.dart';
@@ -15,12 +16,14 @@ class MovieDetailPage extends StatefulWidget {
 class _MovieDetailPageState extends State<MovieDetailPage> {
   late Future<Map<String, dynamic>> _futureCredits;
   Future<List<Movie>>? _futuresimilarMovies;
+  Future<List<Video>>? _futureVideosMovies;
 
   @override
   void initState() {
     super.initState();
     _futureCredits = MovieService().fetchMovieCredits(widget.movie.id);
     _futuresimilarMovies = MovieService().fetchMovieSimilar(widget.movie.id);
+    _futureVideosMovies = MovieService().fetchVideoMovies(widget.movie.id);
   }
 
   @override
@@ -116,11 +119,29 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                   Icon(Icons.star, color: Colors.yellow),
                   SizedBox(width: 4),
                   Text(
-                    widget.movie.voteAverage.toString(),
+                    widget.movie.formattedVoteAverage,
                     style: TextStyle(fontSize: 16),
                   ),
                 ],
               ),
+              GestureDetector(
+                onTap: () {
+                  
+                },
+                child: Container(
+                  margin: EdgeInsets.only(top: 10),
+                  padding: EdgeInsets.all(10),
+                  width: 200,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.yellowAccent),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Watch Trailer",
+                    style: TextStyle(fontSize: 16, color: Colors.yellowAccent),
+                  ),
+                ),
+              )
             ],
           ),
         ),

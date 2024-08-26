@@ -51,6 +51,21 @@ class MovieService {
     }
   }
 
+// Video Trailer
+
+  Future<List<Video>> fetchVideoMovies(int movieId) async {
+    final response = await http.get(
+      Uri.parse('$_baseUrl/movie/$movieId/videos?api_key=$_apiKey'),
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> results = json.decode(response.body)['results'];
+      return results.map((json) => Video.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load videos');
+    }
+  }
+
   // Fetch Cast and Crew
   Future<Map<String, dynamic>> fetchMovieCredits(int movieId) async {
     final response = await http.get(
@@ -82,6 +97,21 @@ class MovieService {
       return movies.map((movieData) => Movie.fromJson(movieData)).toList();
     } else {
       throw Exception('Failed To Load Similar Movies');
+    }
+  }
+
+  Future<List<Movie>> searchMovies(String query) async {
+    final url =
+        'https://api.themoviedb.org/3/search/movie?api_key=$_apiKey&query=$query';
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return (data['results'] as List)
+          .map((json) => Movie.fromJson(json))
+          .toList();
+    } else {
+      throw Exception('Failed to search movies');
     }
   }
 }

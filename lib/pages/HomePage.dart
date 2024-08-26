@@ -21,20 +21,19 @@ class _HomePageState extends State<HomePage> {
         _movieService.fetchNowPlayingMovies(); // Fetch Now Playing movies
     _futureTrendingMovies =
         _movieService.fetchTrendingMovies(); // Fetch Trending movies
-    _futureUpcomingMovies =
-        _movieService.fetchUpcomingMovies(); 
+    _futureUpcomingMovies = _movieService.fetchUpcomingMovies();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Movies'),
+        title: Text('ValMovies'),
         actions: [
           IconButton(
             icon: Icon(Icons.search),
             onPressed: () {
-              // Search functionality
+              context.pushNamed('searchMovie');
             },
           ),
         ],
@@ -82,7 +81,7 @@ class _HomePageState extends State<HomePage> {
               ),
               GestureDetector(
                 onTap: () {
-                  // See All functionality
+                  context.pushNamed('seeAll');
                 },
                 child: Text(
                   'See all',
@@ -127,7 +126,7 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildMovieItem(Movie movie) {
     return GestureDetector(
-      onTap: (){
+      onTap: () {
         context.pushNamed(
           'movieDetail',
           extra: movie, // Pass the movie data as an extra parameter

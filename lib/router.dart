@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:movieapp/pages/HomePage.dart';
 import 'package:movieapp/movie/models/MovieModel.dart';
 import 'package:movieapp/pages/MovieDetail.dart';
+import 'package:movieapp/pages/SearchPage.dart';
 
 /// The route configuration.
 final GoRouter router = GoRouter(
@@ -20,6 +21,14 @@ final GoRouter router = GoRouter(
       builder: (BuildContext context, GoRouterState state) {
         final movie = state.extra as Movie; // Receive the movie data
         return MovieDetailPage(movie: movie);
+      },
+    ),
+
+    GoRoute(
+      path: '/searchMovie',
+      name: 'searchMovie',
+      builder: (BuildContext context, GoRouterState state) {
+        return SearchPage();
       },
     ),
   ],
