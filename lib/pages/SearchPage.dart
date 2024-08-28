@@ -69,6 +69,15 @@ class _SearchPageState extends State<SearchPage> {
                             height: 300,
                             width: 50,
                             fit: BoxFit.cover,
+                            errorBuilder: (context, error, StackTrace) {
+                              return Container(
+                                width: 50,
+                                height: 300,
+                                child: Center(
+                                  child: Text("Invalid Data"),
+                                ),
+                              );
+                            },
                           ),
                         ),
                         title: Text(movie.title),

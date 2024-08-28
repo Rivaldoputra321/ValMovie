@@ -1,8 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:movieapp/api/movie_service.dart';
 import 'package:movieapp/movie/models/MovieModel.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MovieDetailPage extends StatefulWidget {
   final Movie movie;
@@ -24,6 +26,18 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
     _futureCredits = MovieService().fetchMovieCredits(widget.movie.id);
     _futuresimilarMovies = MovieService().fetchMovieSimilar(widget.movie.id);
     _futureVideosMovies = MovieService().fetchVideoMovies(widget.movie.id);
+  }
+
+  // Method to get YouTube video URL
+  String? getYoutubeVideoUrl(List<Video> videos) {
+    final video = videos.firstWhere(
+      (video) =>
+          video.site.toLowerCase() == 'youtube' &&
+          video.type.toLowerCase() == 'trailer',
+    );
+    return video != null
+        ? 'https://www.youtube.com/watch?v=${video.key}'
+        : null;
   }
 
   @override
@@ -125,8 +139,18 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                 ],
               ),
               GestureDetector(
-                onTap: () {
-                  
+                onTap: () async {
+                  if (_futureVideosMovies != null) {
+                    final videos = await _futureVideosMovies;
+                    final url = getYoutubeVideoUrl(videos!);
+                    if (url != null) {
+                      await launch(url);
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Trailer not available')),
+                      );
+                    }
+                  }
                 },
                 child: Container(
                   margin: EdgeInsets.only(top: 10),
@@ -141,7 +165,7 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                     style: TextStyle(fontSize: 16, color: Colors.yellowAccent),
                   ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -154,8 +178,19 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
       width: 100,
       height: 140,
       child: Image.network(
-        'https://image.tmdb.org/t/p/w500${widget.movie.posterPath}',
+        'https://image.tmdb.org/t/p/original${widget.movie.posterPath}',
+        height: 100,
+        width: 140,
         fit: BoxFit.cover,
+        errorBuilder: (context, error, StackTrace) {
+          return Container(
+            width: 140,
+            height: 100,
+            child: Center(
+              child: Text("Photo Not Found"),
+            ),
+          );
+        },
       ),
     );
   }
@@ -328,80 +363,59 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
     );
   }
 
-  Widget _buildMovieSection(
-      {required String title, required Future<List<Movie>>? futureMovies}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildMovieSection({
+    required String title,
+    required Future<List<Movie>>? futureMovies,
+  }) {
+    return FutureBuilder<List<Movie>>(
+      future: futureMovies,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        } else if (snapshot.hasData) {
+          List<Movie> movies = snapshot.data!;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors
-                      .yellowAccent, // Customize this to match the style in the image
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
-              // GestureDetector(
-              //   onTap: () {
-              //     // See All functionality
-              //   },
-              //   child: Text(
-              //     'See all',
-              //     style: TextStyle(
-              //       fontSize: 16,
-              //       color: Colors.yellowAccent,
-              //     ),
-              //   ),
-              // ),
+              SizedBox(
+                height: 240,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: movies.length,
+                  itemBuilder: (context, index) {
+                    final movie = movies[index];
+                    return _buildMovieItem(movie);
+                  },
+                ),
+              ),
             ],
-          ),
-          SizedBox(height: 8),
-          FutureBuilder<List<Movie>>(
-            future: futureMovies,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (snapshot.hasData) {
-                final movies = snapshot.data!;
-                return Container(
-                  height: 200, // Fixed height for the horizontal list
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: movies.length,
-                    itemBuilder: (context, index) {
-                      final movie = movies[index];
-                      return _buildMovieItem(movie);
-                    },
-                  ),
-                );
-              } else {
-                return Center(child: Text('No movies available.'));
-              }
-            },
-          ),
-        ],
-      ),
+          );
+        } else {
+          return Center(child: Text('No $title available.'));
+        }
+      },
     );
   }
 
   Widget _buildMovieItem(Movie movie) {
     return GestureDetector(
       onTap: () {
-        context.pushNamed(
-          'movieDetail',
-          extra: movie, // Pass the movie data as an extra parameter
-        );
+        context.push('/movies/${movie.id}', extra: movie);
       },
       child: Container(
-        width: 130, // Fixed width for each movie item
+        width: 140,
         margin: const EdgeInsets.only(right: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -410,16 +424,17 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
               borderRadius: BorderRadius.circular(8.0),
               child: Image.network(
                 'https://image.tmdb.org/t/p/w500${movie.posterPath}',
-                height: 150,
-                width: 130,
+                height: 180,
+                width: 140,
                 fit: BoxFit.cover,
               ),
             ),
             SizedBox(height: 8),
             Text(
               movie.title,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
                 color: Colors.white,

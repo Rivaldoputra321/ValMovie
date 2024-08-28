@@ -6,6 +6,7 @@ class MovieService {
   static const String _apiKey =
       'e4f1e22cc8dfb95aab3f2c1699289773'; // Replace with your TMDb API key
   static const String _baseUrl = 'https://api.themoviedb.org/3';
+  
 
   // Fetch Now Playing Movies
   Future<List<Movie>> fetchNowPlayingMovies() async {

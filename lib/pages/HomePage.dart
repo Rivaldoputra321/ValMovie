@@ -24,6 +24,16 @@ class _HomePageState extends State<HomePage> {
     _futureUpcomingMovies = _movieService.fetchUpcomingMovies();
   }
 
+  Future<void> _fetchData() async {
+    await Future.delayed(Duration(seconds: 2));
+    setState(() {
+      // pada saat update data
+      _futureNowPlayingMovies = MovieService().fetchNowPlayingMovies();
+      _futureTrendingMovies = MovieService().fetchTrendingMovies();
+      _futureUpcomingMovies = MovieService().fetchUpcomingMovies();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,23 +48,26 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildMovieSection(
-              title: "Now Playing",
-              futureMovies: _futureNowPlayingMovies,
-            ),
-            _buildMovieSection(
-              title: "Trending This Week",
-              futureMovies: _futureTrendingMovies,
-            ),
-            _buildMovieSection(
-              title: "Coming Soon",
-              futureMovies: _futureUpcomingMovies,
-            ),
-          ],
+      body: RefreshIndicator(
+        onRefresh: _fetchData,
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildMovieSection(
+                title: "Now Playing",
+                futureMovies: _futureNowPlayingMovies,
+              ),
+              _buildMovieSection(
+                title: "Trending This Week",
+                futureMovies: _futureTrendingMovies,
+              ),
+              _buildMovieSection(
+                title: "Coming Soon",
+                futureMovies: _futureUpcomingMovies,
+              ),
+            ],
+          ),
         ),
       ),
     );
